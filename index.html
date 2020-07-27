@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Boids</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css" >
+    <style type="text/css">
+    .canvas {
+      background-color: rgb(100, 100, 125); 
+      width: 100%;
+      height: 100%;
+      margin: 1em;
+      padding: 1em;
+    }
+
+    .col-container {
+      display: block;
+      height: 94vh;
+    }
+    </style>
+  </head>
+  <body>
+
+    <div class="container-fluid">
+      <div class="row">
+
+        <div class="col-sm-8 col-container">
+          <canvas id="boidsCanvas" class="canvas" width="150" height="150"></canvas>
+        </div>
+        
+        <div class="col-sm col-container overflow-auto">
+          
+          <form id="config" >
+            <small class="text-muted float-right">{{fps}} fps</small>
+            <div class="form-row mb-3">
+              <div class="col-4"> <label for="applyRules">Apply rules</label> </div>
+              <div class="col">
+                <input id="applyRules" class="form-check-input" type="checkbox" v-model="applyRules">
+                <small id="marginHelp" class="form-text text-muted">Avoid others boids, align with flock pace, Go to flock center</small>
+              </div>
+            </div>
+
+            <div class="form-row mb-3">
+              <div class="col-4"> <label for="numBoids" >Boids Number</label> </div>
+              <div class="col">
+                <input id="numBoids" class="form-control-range form-control-sm" type="range" 
+                      min="0" max="600"  v-model.number="numBoids" v-bind:title="numBoids">
+                <small id="marginHelp" class="form-text text-muted"></small>
+              </div>
+            </div>
+
+            <div class="form-row mb-3">
+              <div class="col-4"><label for="speedLimit">Speed Limit</label></div>
+              <div class="col">
+                <input id="speedLimit" class="form-control form-control-sm" type="range" min="0" max="20"  
+                      v-model.number="speedLimit" v-bind:title="speedLimit">
+                <small id="speedLimitHelp" class="form-text text-muted">Max speed of the boids</small>
+              </div>
+            </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="visualRange">Visual Range</label></div>
+                <div class="col">
+                  <input id="visualRange" class="form-control form-control-sm" type="range" min="1" max="400" 
+                    v-model.number="visualRange" v-bind:title="visualRange">
+                  <small id="visualRangeHelp" class="form-text text-muted">Perimeter around the boid where the other boids belong to the same flock</small>
+                  <input id="showVisualRange" class="form-check-input" type="checkbox" v-model="showVisualRange" title="Display a circle around each boid">
+                  <small id="ShowVisualDistanceLabel" class="text-muted">Show Visual Range</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="centeringFactor">Centering Factor</label></div>
+                <div class="col">
+                   <input id="centeringFactor" class="form-control form-control-sm" type="range" min="0" max="50" v-model.number="centeringFactor">
+                  <small id="centeringFactorHelp" class="form-text text-muted">How much boids try to go to the center of their flock</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="matchVelocityFactor">Match Velocity Factor</label></div>
+                <div class="col">
+                  <input id="matchVelocityFactor"class="form-control form-control-sm"  type="range" min="0" max="20" v-model.number="matchVelocityFactor">
+                  <small id="centeringFactorHelp" class="form-text text-muted">How much boids try to keep the same average speed and direction as the flock</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="minDistance">Min Distance</label></div>
+                <div class="col">
+                  <input id="minDistance" class="form-control form-control-sm" type="range" min="1" max="100"  
+                      v-model.number="minDistance" v-bind:title="minDistance">
+                  <small id="minDistanceHelp" class="form-text text-muted">Distance from which a boid avoid other boids</small>
+                  <input id="showMinDistance" class="form-check-input" type="checkbox" v-model="showMinDistance" title="Display a circle around each boid">
+                  <small id="minDistanceLabel" class="text-muted">Show Min Distance</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="avoidFactor">Avoid Factor</label></div>
+                <div class="col">
+                  <input id="avoidFactor" class="form-control form-control-sm" type="range" min="0" max="20"  v-model.number="avoidFactor">
+                  <small id="avoidFactorHelp" class="form-text text-muted">How much "avoid" strategy is taken into account</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="avoidMouseFactor">Avoid mouse factor</label></div>
+                <div class="col">
+                  <input id="avoidMouseFactor" class="form-control form-control-sm" type="range" min="0" max="50"  v-model.number="avoidMouseFactor">
+                  <small id="avoidMouseFactorHelp" class="form-text text-muted">How much effort a boid has to made to avoid the mouse</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="mouseMinDistance">Distance around the mouse</label></div>
+                <div class="col">
+                  <input id="mouseMinDistance" class="form-control form-control-sm" type="range" min="1" max="150"  
+                      v-model.number="mouseMinDistance"  v-bind:title="mouseMinDistance">
+                  <small id="mouseMinDistanceHelp" class="form-text text-muted"></small>
+                  
+                  <input id="showMouseMinDistance" class="form-check-input" type="checkbox" v-model="showMouseMinDistance" title="Display a circle around the mouse">
+                  <small id="mouseMinDistanceLabel" class="text-muted">Show Mouse Min Distance</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="margin">Margin</label></div>
+                <div class="col">
+                  <input id="margin" class="form-control form-control-sm" type="range" min="0" max="300"  
+                  v-model.number="margin" v-bind:title="margin">
+                  <small id="marginHelp" class="form-text text-muted">The distance to stay away from the borders</small>
+                </div>
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-4"><label for="drawTrail">Display the trail of each boids</label></div>
+                <div class="col">
+                  <input id="drawTrail" class="form-check-input" type="checkbox" v-model="drawTrail">
+                </div>
+              </div>
+            
+          </form>
+        </div>
+        
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.19/lodash.min.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+    <script src="./boids.js"></script>
+
+  </body>
+</html>
